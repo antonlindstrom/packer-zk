@@ -1,31 +1,53 @@
 {
-  "builders": [{
-    "type": "vmware",
-    "iso_url": "http://releases.ubuntu.com/12.04/ubuntu-12.04.3-server-amd64.iso",
-    "iso_checksum": "2cbe868812a871242cdcdd8f2fd6feb9",
-    "iso_checksum_type": "md5",
-    "ssh_username": "packer",
-    "ssh_password": "packer",
-    "shutdown_command": "echo 'packer' | sudo -E -S shutdown -P now",
-    "http_directory": "./www",
-    "boot_command": [
-      "<esc><esc><enter><wait>",
-      "/install/vmlinuz noapic ",
-      "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-      "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-      "hostname={{ .Name }} ",
-      "fb=false debconf/frontend=noninteractive ",
-      "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-      "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-      "initrd=/install/initrd.gz -- <enter>"
-    ],
-    "boot_wait": "5s"
-  }],
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": ""
+  },
+  "builders": [
+    {
+      "type": "vmware",
+      "iso_url": "http://releases.ubuntu.com/12.04/ubuntu-12.04.3-server-amd64.iso",
+      "iso_checksum": "2cbe868812a871242cdcdd8f2fd6feb9",
+      "iso_checksum_type": "md5",
+      "ssh_username": "packer",
+      "ssh_password": "packer",
+      "shutdown_command": "echo 'packer' | sudo -E -S shutdown -P now",
+      "http_directory": "./www",
+      "boot_command": [
+        "<esc><esc><enter><wait>",
+        "/install/vmlinuz noapic ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{ .Name }} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "initrd=/install/initrd.gz -- <enter>"
+      ],
+      "boot_wait": "5s"
+    },
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key` }}",
+      "region": "us-east-1",
+      "source_ami": "ami-de0d9eb7",
+      "instance_type": "t1.micro",
+      "ssh_username": "ubuntu",
+      "ssh_timeout": "5m",
+      "ami_name": "packer-zk-{{timestamp}}"
+    }
+  ],
   "provisioners": [
     {
       "type": "file",
-      "source": "java.preseed",
+      "source": "./files/java.preseed",
       "destination": "/tmp/java.preseed"
+    },
+    {
+      "type": "file",
+      "source": "./files/zookeeper.cfg",
+      "destination": "/tmp/zookeeper.cfg"
     },
     {
       "type": "shell",
@@ -37,7 +59,10 @@
         "add-apt-repository -y ppa:webupd8team/java",
         "apt-get update -qq",
         "debconf-set-selections /tmp/java.preseed",
-        "sudo apt-get install -y oracle-java7-installer"
+        "apt-get install -y oracle-java7-installer",
+        "wget http://apache.mirrors.lucidnetworks.net/zookeeper/stable/zookeeper-3.4.5.tar.gz",
+        "tar xzf zookeeper-3.4.5.tar.gz",
+        "mv /tmp/zookeeper.cfg zookeeper-3.4.5/conf/zoo.cfg"
       ]
     }
   ]
