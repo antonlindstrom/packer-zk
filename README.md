@@ -2,6 +2,10 @@
 
 This is an example of a Zookeeper instance built by packer.
 
+Note that this is a very simple install of ZK and it isn't started by default.
+The instance should be managed by configuration management to do more advanced
+stuff.
+
 ## Running
 
 Set environment variables for AWS:
