@@ -8,6 +8,10 @@ stuff.
 
 ## Running
 
+This section describes how to run this.
+
+### EC2
+
 Set environment variables for AWS:
 
     export AWS_ACCESS_KEY=myawskeyid
@@ -16,6 +20,14 @@ Set environment variables for AWS:
 Build image on Amazon EC2:
 
     packer build -only=amazon-ebs zk.json
+
+### VMWare
+
+Build image for VMware Fusion:
+
+    packer build -only=vwmare zk.json
+
+### When the system is up
 
 Run Zookeeper:
 
